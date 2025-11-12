@@ -41,7 +41,10 @@ def show_all_family_country_tab():
         # -------------------------------
         # ✅ World map
         # -------------------------------
-        st.subheader("🌍 Global Map – Patent Family Filings")
+        st.markdown(
+            "<h2 style='color: #00BFFF;'>Global Map – Patent Family Filings</h2>",
+            unsafe_allow_html=True,
+        )
 
         fig_world = px.choropleth(
             df_family_map,
@@ -49,12 +52,14 @@ def show_all_family_country_tab():
             color="Total",
             hover_name="All Family Country",
             hover_data={"Total": True},
-            color_continuous_scale="Viridis",
+            color_continuous_scale="OrRd",
             projection="natural earth",
         )
 
         fig_world.update_layout(
-            coloraxis_colorbar=dict(title="Total Patents", ticksuffix=" "), height=600
+            coloraxis_colorbar=dict(title="Total Patents", ticksuffix=" "),
+            height=600,
+            title_font_color="#00BFFF",
         )
 
         # Add annotation for non-standard codes as legend
@@ -105,7 +110,7 @@ def show_all_family_country_tab():
         # -------------------------------
         # ✅ Nordic Data Section
         # -------------------------------
-        st.subheader("🇳🇴 Nordic Data – Patent Family Filings")
+        st.subheader("Nordic Data – Patent Family Filings")
 
         nordic_codes = ["FI", "SE", "NO", "DK", "IS"]
         df_nordic = df_family[df_family["All Family Country"].isin(nordic_codes)].copy()
@@ -145,7 +150,7 @@ def show_all_family_country_tab():
                 color="Total",
                 hover_name="All Family Country",
                 hover_data={"Total": True},
-                color_continuous_scale="Blues",
+                color_continuous_scale="OrRd",
                 scope="europe",
                 projection="natural earth",
             )
