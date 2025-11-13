@@ -1,5 +1,13 @@
 import pandas as pd
 
+"""
+Merge, Assignee, Country, Count and Inventor, Country, Count, in files  
+
+Output: Inventors_Country_Count, Assignee_Country_Count.
+
+Some  Country as missing. we have to processed.
+
+"""
 
 def process_country_count_data():
     # File paths
