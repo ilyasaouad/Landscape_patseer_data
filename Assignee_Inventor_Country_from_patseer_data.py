@@ -2,6 +2,16 @@ import pandas as pd
 import re
 
 
+"""
+Get data from patseer, Assignee (Country) Inventor (County) as xlsx file
+Extract country of both assingnee and inventors.
+
+Get Assignee_Count and Inventors_Count fra patseer, as csv-file
+
+Output Assignee_Country.csv and Inventor_Country.csv.
+
+"""
+
 def process_data():
     # Read the dataset
     input_excel_path = r"C:\Users\iao\Desktop\Landscape_patseer_data\inn_data\Assignee_Inventor_Country.xlsx"

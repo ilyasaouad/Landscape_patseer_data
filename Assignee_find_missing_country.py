@@ -5,10 +5,13 @@ import re
 def find_missing_country_records():
     # File paths
     assignee_country_count_path = r"C:\Users\iao\Desktop\Landscape_patseer_data\inn_data\Assignee_Country_Count.csv"
+
     assignee_country_path = (
         r"C:\Users\iao\Desktop\Landscape_patseer_data\inn_data\Assignee_Country.csv"
     )
+
     assignee_inventor_xlsx_path = r"C:\Users\iao\Desktop\Landscape_patseer_data\inn_data\Assignee_Inventor_Country.xlsx"
+
     output_dir = r"C:\Users\iao\Desktop\Landscape_patseer_data\inn_data"
 
     try:
