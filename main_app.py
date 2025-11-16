@@ -3,9 +3,12 @@ import streamlit as st
 # App modules
 from app.Assignee_Inventor_Country_Count import (
     process_country_count_data,
-    show_assignee_analysis_tab,
+    show_assignee_inventor_country_count_tab,
+    show_inventor_analysis_tab,
+    show_entity_analysis_tab,
 )
-from app.All_Family_Country_Map import show_all_family_country_tab
+from app.Family_Priority_Count_Map import show_all_family_country_tab
+from app.Timeline_Current_Owner_Count import show_timeline_current_owner_tab
 
 
 # ---------------------------------------------------------
@@ -21,12 +24,12 @@ st.set_page_config(
 # ---------------------------------------------------------
 # Sidebar: Title + Refresh Button
 # ---------------------------------------------------------
-st.sidebar.title("🔎 Patent Dashboard Menu")
+st.sidebar.title("Patent Dashboard Menu")
 
-if st.sidebar.button("🔄 Refresh & Reprocess Data"):
+if st.sidebar.button("Refresh & Reprocess Data"):
     with st.spinner("Reprocessing all data… This may take a moment..."):
         process_country_count_data()
-    st.sidebar.success("✔ Data refreshed!")
+    st.sidebar.success("Data refreshed!")
 
 
 # ---------------------------------------------------------
@@ -44,8 +47,9 @@ if "data_preprocessed" not in st.session_state:
 page = st.sidebar.radio(
     "Select View:",
     [
-        "🌍 Geographic Patent Family Analysis",
-        "🏢 Assignee Analysis",
+        "Geographic Patent Analysis",
+        "Entity Analysis",
+        "Timeline Analysis",
     ],
 )
 
@@ -55,7 +59,7 @@ page = st.sidebar.radio(
 # ---------------------------------------------------------
 st.markdown(
     """
-# 📘 Patent Landscape Dashboard
+# Patent Landscape Dashboard
 
 Explore patent filing trends across regions, assignees, and jurisdictions.
 """
@@ -65,8 +69,11 @@ Explore patent filing trends across regions, assignees, and jurisdictions.
 # ---------------------------------------------------------
 # PAGE ROUTING
 # ---------------------------------------------------------
-if page == "🌍 Geographic Patent Family Analysis":
+if page == "Geographic Patent Analysis":
     show_all_family_country_tab()
 
-elif page == "🏢 Assignee Analysis":
-    show_assignee_analysis_tab()
+elif page == "Entity Analysis":
+    show_entity_analysis_tab()
+
+elif page == "Timeline Analysis":
+    show_timeline_current_owner_tab()

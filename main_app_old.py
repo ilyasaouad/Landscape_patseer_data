@@ -1,6 +1,6 @@
 import streamlit as st
 from Assignee_Inventor_Country_from_patseer_data import process_data
-from All_Family_Country_Map import show_all_family_country_tab
+from app.Family_Priority_Count_Map import show_all_family_country_tab
 from Assignee_Count import show_assignee_count_tab
 from Assignee_Inventor_Country_Count import process_country_count_data
 
