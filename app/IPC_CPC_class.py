@@ -7,10 +7,21 @@ Analyzes patent classification data for current owners.
 import streamlit as st
 import pandas as pd
 import numpy as np
+import plotly.express as px
+import plotly.graph_objects as go
+from plotly.subplots import make_subplots
 import sys
 import os
+
+# Optional NetworkX import for network graphs
+try:
+    import networkx as nx
+    NETWORKX_AVAILABLE = True
+except ImportError:
+    NETWORKX_AVAILABLE = False
+
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from utils.file_paths import raw
+from utils.file_paths import raw, processed
 
 
 def show_ipc_cpc_classification_tab():
@@ -20,6 +31,18 @@ def show_ipc_cpc_classification_tab():
     """
     
     st.title("IPC and CPC Classification Analysis")
+    
+    # Educational explanation about patent classifications
+    st.info("""
+    **💡 Why Patents Have Multiple Classifications:**
+    
+    A single patent application often covers multiple classification codes because modern inventions typically involve several related technologies or technical areas. For example:
+    
+    - A **quantum computer patent** might include classifications for: quantum computing (G06N), semiconductor devices (H01L), and data processing (G06F)
+    - A **medical device patent** might span: diagnostic equipment (A61B), data analysis (G06F), and wireless communication (H04L)
+    
+    This multi-classification approach ensures patents are discoverable by researchers working in any of the related technical fields and reflects the interdisciplinary nature of modern innovation.
+    """)
     
     # Load and process IPC data
     st.markdown("## IPC (International Patent Classification) Analysis")
@@ -32,6 +55,12 @@ def show_ipc_cpc_classification_tab():
         display_class_descriptions(ipc_summary, "IPC")
         
         st.dataframe(ipc_summary, use_container_width=True)
+        
+        # Save to CSV
+        save_classification_data(ipc_summary, "Top_IPC_Assignee_Count.csv")
+        
+        # Add visualizations
+        create_classification_visualizations(ipc_summary, "IPC")
     
     # Load and process CPC data
     st.markdown("## CPC (Cooperative Patent Classification) Analysis") 
@@ -44,6 +73,12 @@ def show_ipc_cpc_classification_tab():
         display_class_descriptions(cpc_summary, "CPC")
         
         st.dataframe(cpc_summary, use_container_width=True)
+        
+        # Save to CSV
+        save_classification_data(cpc_summary, "Top_CPC_Assignee_Count.csv")
+        
+        # Add visualizations
+        create_classification_visualizations(cpc_summary, "CPC")
 
 
 def create_classification_summary(filename, classification_type):
@@ -201,6 +236,384 @@ def display_class_descriptions(df, classification_type):
         for col_code in class_columns:
             st.markdown(f"- **{col_code}**: Patent classification")
         st.markdown("")
+
+
+def save_classification_data(df, filename):
+    """
+    Save the classification dataframe to processed data folder.
+    """
+    try:
+        output_path = processed(filename)
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        df.to_csv(output_path, index=False, encoding="utf-8")
+        st.success(f"✅ Saved {filename} to data/processed/")
+    except Exception as e:
+        st.error(f"Error saving {filename}: {e}")
+
+
+def create_classification_visualizations(df, classification_type):
+    """
+    Create visualizations for the classification data.
+    """
+    
+    st.markdown(f"### {classification_type} Visualizations")
+    
+    # 1. Grouped Bar Chart
+    st.markdown(f"#### 1. Grouped Bar Chart - Top Companies by {classification_type} Classification")
+    create_grouped_bar_chart(df, classification_type)
+    
+    # 2. Heatmap
+    st.markdown(f"#### 2. Heatmap - {classification_type} Activity Matrix")
+    create_heatmap(df, classification_type)
+    
+    # 3. Network Node Graph
+    st.markdown(f"#### 3. Network Graph - Company-Classification Relationships")
+    create_network_graph(df, classification_type)
+    
+    # 4. Example Analysis
+    st.markdown(f"#### 4. Example Analysis - Top Company")
+    create_example_analysis(df, classification_type)
+
+
+def create_grouped_bar_chart(df, classification_type):
+    """
+    Create a grouped bar chart showing top companies across classifications.
+    """
+    
+    # Get classification columns (skip Current Owner and Total)
+    class_cols = df.columns[2:].tolist()
+    
+    # Prepare data for grouped bar chart - take top 8 companies
+    df_chart = df.head(8)
+    
+    fig = go.Figure()
+    
+    # Add a bar for each classification
+    colors = px.colors.qualitative.Set3
+    for i, col in enumerate(class_cols):
+        fig.add_trace(go.Bar(
+            name=col,
+            x=df_chart['Current Owner'],
+            y=df_chart[col],
+            marker_color=colors[i % len(colors)],
+            text=df_chart[col],
+            textposition='auto'
+        ))
+    
+    fig.update_layout(
+        title=f'Top 8 Companies - {classification_type} Patent Distribution',
+        xaxis_title='Current Owner',
+        yaxis_title='Number of Patents',
+        barmode='group',
+        height=500,
+        showlegend=True,
+        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
+        xaxis_tickangle=-45
+    )
+    
+    st.plotly_chart(fig, use_container_width=True)
+
+
+def create_heatmap(df, classification_type):
+    """
+    Create a heatmap showing patent activity across companies and classifications.
+    """
+    
+    # Get classification columns (skip Current Owner and Total)
+    class_cols = df.columns[2:].tolist()
+    
+    # Prepare data for heatmap - use all 15 companies
+    heatmap_data = df[['Current Owner'] + class_cols].set_index('Current Owner')
+    
+    # Create heatmap
+    fig = px.imshow(
+        heatmap_data.values,
+        labels=dict(x="Classification", y="Current Owner", color="Patents"),
+        x=class_cols,
+        y=heatmap_data.index,
+        color_continuous_scale='Blues',
+        aspect='auto'
+    )
+    
+    fig.update_layout(
+        title=f'{classification_type} Patent Activity Heatmap',
+        height=600,
+        xaxis_title=f'{classification_type} Classifications',
+        yaxis_title='Current Owners'
+    )
+    
+    # Add text annotations
+    for i, row in enumerate(heatmap_data.values):
+        for j, value in enumerate(row):
+            if value > 0:
+                fig.add_annotation(
+                    x=j, y=i,
+                    text=str(int(value)),
+                    showarrow=False,
+                    font=dict(color="white" if value > heatmap_data.values.max()/2 else "black")
+                )
+    
+    st.plotly_chart(fig, use_container_width=True)
+
+
+def create_network_graph(df, classification_type):
+    """
+    Create a network graph showing relationships between companies and classifications.
+    """
+    
+    if not NETWORKX_AVAILABLE:
+        st.warning("NetworkX not installed. Install with: pip install networkx")
+        st.info("Network graph visualization is not available.")
+        return
+    
+    try:
+        # Create network graph
+        G = nx.Graph()
+        
+        # Get classification columns (skip Current Owner and Total)
+        class_cols = df.columns[2:].tolist()
+        
+        # Add nodes for companies and classifications
+        companies = df['Current Owner'].head(8).tolist()  # Top 8 companies for clarity
+        
+        # Add company nodes
+        for company in companies:
+            G.add_node(company, node_type='company', size=50)
+        
+        # Add classification nodes
+        for classification in class_cols:
+            G.add_node(classification, node_type='classification', size=30)
+        
+        # Add edges based on patent counts
+        for _, row in df.head(8).iterrows():
+            company = row['Current Owner']
+            for classification in class_cols:
+                patent_count = row[classification]
+                if patent_count > 0:
+                    # Edge weight based on patent count
+                    weight = patent_count / 10  # Scale down for visualization
+                    G.add_edge(company, classification, weight=weight, patents=patent_count)
+        
+        # Calculate positions using spring layout
+        pos = nx.spring_layout(G, k=3, iterations=50)
+        
+        # Extract coordinates
+        edge_x = []
+        edge_y = []
+        edge_info = []
+        
+        for edge in G.edges():
+            x0, y0 = pos[edge[0]]
+            x1, y1 = pos[edge[1]]
+            edge_x.extend([x0, x1, None])
+            edge_y.extend([y0, y1, None])
+            edge_info.append(f"{edge[0]} - {edge[1]}: {G[edge[0]][edge[1]]['patents']} patents")
+        
+        # Create enhanced edge traces with hover info
+        edge_traces = []
+        
+        # Group edges by company for better visualization
+        company_colors = px.colors.qualitative.Set3
+        
+        for i, company in enumerate(companies):
+            company_edge_x = []
+            company_edge_y = []
+            company_edge_info = []
+            
+            # Get edges for this specific company
+            for edge in G.edges():
+                if edge[0] == company:  # Company to classification edge
+                    x0, y0 = pos[edge[0]]
+                    x1, y1 = pos[edge[1]]
+                    company_edge_x.extend([x0, x1, None])
+                    company_edge_y.extend([y0, y1, None])
+                    patents = G[edge[0]][edge[1]]['patents']
+                    company_edge_info.append(f"{edge[0]} → {edge[1]}: {patents} patents")
+            
+            if company_edge_x:  # Only create trace if there are edges
+                edge_trace = go.Scatter(
+                    x=company_edge_x, y=company_edge_y,
+                    line=dict(width=2, color=company_colors[i % len(company_colors)]),
+                    hoverinfo='text',
+                    hovertext=company_edge_info,
+                    mode='lines',
+                    name=f'{company} connections',
+                    showlegend=False,
+                    opacity=0.7
+                )
+                edge_traces.append(edge_trace)
+        
+        # Create node traces
+        company_x = [pos[node][0] for node in companies if node in pos]
+        company_y = [pos[node][1] for node in companies if node in pos]
+        company_names = [node for node in companies if node in pos]
+        
+        class_x = [pos[node][0] for node in class_cols if node in pos]
+        class_y = [pos[node][1] for node in class_cols if node in pos]
+        class_names = [node for node in class_cols if node in pos]
+        
+        # Create enhanced hover information for companies
+        company_hover_text = []
+        for company in company_names:
+            # Get connected classifications for this company
+            row_data = df[df['Current Owner'] == company].iloc[0]
+            connected_classes = []
+            for classification in class_cols:
+                count = row_data[classification]
+                if count > 0:
+                    connected_classes.append(f"{classification}: {count} patents")
+            
+            hover_info = f"<b>{company}</b><br>" + "<br>".join(connected_classes)
+            company_hover_text.append(hover_info)
+        
+        # Company nodes with enhanced hover
+        company_trace = go.Scatter(
+            x=company_x, y=company_y,
+            mode='markers+text',
+            marker=dict(
+                size=25, 
+                color='lightblue', 
+                line=dict(width=2, color='darkblue'),
+                sizemode='diameter'
+            ),
+            text=[name.replace(' ', '<br>') if len(name) > 15 else name for name in company_names],
+            textposition="middle center",
+            textfont=dict(size=8),
+            hoverinfo='text',
+            hovertext=company_hover_text,
+            hoverlabel=dict(bgcolor="white", font_size=12, font_family="Arial"),
+            name='Companies',
+            customdata=company_names  # For potential click handling
+        )
+        
+        # Create enhanced hover for classifications
+        class_hover_text = []
+        for classification in class_names:
+            # Get companies using this classification
+            using_companies = []
+            for _, row in df.head(8).iterrows():
+                company = row['Current Owner']
+                count = row[classification]
+                if count > 0:
+                    using_companies.append(f"{company}: {count} patents")
+            
+            hover_info = f"<b>{classification}</b><br>" + "<br>".join(using_companies)
+            class_hover_text.append(hover_info)
+        
+        # Classification nodes with enhanced hover
+        class_trace = go.Scatter(
+            x=class_x, y=class_y,
+            mode='markers+text',
+            marker=dict(
+                size=18, 
+                color='lightcoral', 
+                line=dict(width=2, color='darkred'),
+                sizemode='diameter'
+            ),
+            text=[name.replace('/', '<br>') if '/' in name else name for name in class_names],
+            textposition="middle center",
+            textfont=dict(size=7),
+            hoverinfo='text',
+            hovertext=class_hover_text,
+            hoverlabel=dict(bgcolor="white", font_size=12, font_family="Arial"),
+            name='Classifications'
+        )
+        
+        # Create figure with all traces
+        all_traces = edge_traces + [company_trace, class_trace]
+        fig = go.Figure(data=all_traces,
+                       layout=go.Layout(
+                           title=dict(
+                               text=f'{classification_type} Network: Company-Classification Relationships',
+                               font=dict(size=16)
+                           ),
+                           showlegend=True,
+                           hovermode='closest',
+                           margin=dict(b=20,l=5,r=5,t=40),
+                           annotations=[ dict(
+                               text="💡 Hover over nodes to see patent details. Each company's connections are color-coded.",
+                               showarrow=False,
+                               xref="paper", yref="paper",
+                               x=0.005, y=-0.002,
+                               xanchor='left', yanchor='bottom',
+                               font=dict(size=12)
+                           )],
+                           xaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
+                           yaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
+                           height=600
+                       ))
+        
+        st.plotly_chart(fig, use_container_width=True)
+        
+    except Exception as e:
+        st.warning(f"Network graph could not be created: {e}")
+        st.info("Install networkx with: pip install networkx")
+
+
+def create_example_analysis(df, classification_type):
+    """
+    Create a simple example analysis of the top company's patent classification profile.
+    """
+    
+    # Get the top company (first row)
+    top_company_data = df.iloc[0]
+    company_name = top_company_data['Current Owner']
+    total_patents = top_company_data['Total']
+    
+    # Get classification columns and their counts
+    class_cols = df.columns[2:].tolist()
+    company_classes = []
+    
+    for classification in class_cols:
+        count = top_company_data[classification]
+        if count > 0:
+            company_classes.append((classification, count))
+    
+    # Sort by patent count
+    company_classes.sort(key=lambda x: x[1], reverse=True)
+    
+    # Create example analysis
+    st.markdown("**📋 Example Analysis (Not Deep Analysis)**")
+    
+    st.info(f"""
+    **Company:** {company_name}  
+    **Total Patents:** {total_patents}
+    
+    **Top Classification Areas:**
+    """)
+    
+    # Show top classifications with simple analysis
+    analysis_text = f"**{company_name}** shows patent activity across **{len(company_classes)}** different {classification_type} classifications:\n\n"
+    
+    for i, (classification, count) in enumerate(company_classes, 1):
+        percentage = (count / total_patents) * 100
+        analysis_text += f"**{i}. {classification}**: {count} patents ({percentage:.1f}% of portfolio)\n\n"
+    
+    st.markdown(analysis_text)
+    
+    # Simple interpretation
+    if company_classes:
+        top_class, top_count = company_classes[0]
+        top_percentage = (top_count / total_patents) * 100
+        
+        st.markdown("**📊 Simple Interpretation:**")
+        
+        if top_percentage > 50:
+            focus_level = "highly concentrated"
+        elif top_percentage > 30:
+            focus_level = "moderately focused"
+        else:
+            focus_level = "diversified"
+            
+        st.success(f"""
+        **{company_name}** has a **{focus_level}** patent portfolio with **{top_percentage:.1f}%** of patents in **{top_class}**.
+        
+        **Pattern:** The company shows {"strong specialization" if top_percentage > 50 else "moderate diversification" if len(company_classes) > 2 else "focused innovation"} across {len(company_classes)} classification areas.
+        """)
+        
+    st.warning("""
+    **⚠️ Note:** This is a basic example analysis showing how to interpret classification connections. A NOT comprehensive analysis.
+    """)
 
 
 def load_and_process_classification_data(filename, classification_type):
