@@ -9,6 +9,7 @@ from app.Assignee_Inventor_Country_Count import (
 )
 from app.Family_Priority_Count_Map import show_all_family_country_tab
 from app.Timeline_Current_Owner_Count import show_timeline_current_owner_tab
+from app.IPC_CPC_class import show_ipc_cpc_classification_tab
 
 
 # ---------------------------------------------------------
@@ -50,6 +51,7 @@ page = st.sidebar.radio(
         "Geographic Patent Analysis",
         "Entity Analysis",
         "Timeline Analysis",
+        "Classification Analysis: IPC/CPC Codes",
     ],
 )
 
@@ -77,3 +79,6 @@ elif page == "Entity Analysis":
 
 elif page == "Timeline Analysis":
     show_timeline_current_owner_tab()
+
+elif page == "Classification Analysis: IPC/CPC Codes":
+    show_ipc_cpc_classification_tab()
