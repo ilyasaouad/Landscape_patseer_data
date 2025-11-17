@@ -17,6 +17,21 @@ def iso2_to_iso3(code):
 
 
 def show_all_family_country_tab():
+    # Debug: Check if files exist
+    required_files = [
+        'data/raw/All_family_Country_Map.csv',
+        'data/raw/Priority_Country_Map.csv'
+    ]
+    
+    missing_files = []
+    for file in required_files:
+        if not os.path.exists(file):
+            missing_files.append(file)
+    
+    if missing_files:
+        st.error(f"Missing files: {missing_files}")
+        st.info("Please ensure all required data files are uploaded to the repository.")
+        return
     st.title("Geographic Patent Analysis")
     
     # Add explanatory comment
