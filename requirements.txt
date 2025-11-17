@@ -1,17 +1,7 @@
-streamlit==1.51.0
-tenacity==9.1.2
-toml==0.10.2
-tornado==6.5.2
-typing-extensions==4.15.0
-tzdata==2025.2
-urllib3==2.5.0
-watchdog==6.0.0
-
-pandas==2.3.3
-pycountry==24.6.1
-plotly==6.4.0
-openpyxl==3.1.2
-Pillow==10.0.0
-
-# Force rebuild for openpyxl dependency
+streamlit
+pandas
+plotly
+pycountry
+openpyxl
+Pillow
 
