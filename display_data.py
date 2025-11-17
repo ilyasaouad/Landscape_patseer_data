@@ -2,6 +2,7 @@ import streamlit as st
 
 # App modules
 from app.Assignee_Inventor_Country_Count import (
+    process_country_count_data,
     show_assignee_inventor_country_count_tab,
     show_inventor_analysis_tab,
     show_entity_analysis_tab,
@@ -24,9 +25,11 @@ st.set_page_config(
 
 
 # ---------------------------------------------------------
-# Skip Data Preprocessing (for display only)
+# Initialize data processing flag (but skip actual processing)
 # ---------------------------------------------------------
-# No data processing - assumes all data files are already available
+# Set the flag so modules know data is "available" without processing
+if "data_preprocessed" not in st.session_state:
+    st.session_state["data_preprocessed"] = True  # Skip processing, assume data exists
 
 
 # ---------------------------------------------------------
