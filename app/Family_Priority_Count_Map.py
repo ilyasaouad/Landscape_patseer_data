@@ -42,10 +42,30 @@ def show_all_family_country_tab():
 def show_patent_families_analysis():
     st.subheader("Patent Families Analysis")
 
-    file_path = raw("All_family_Country_Map.csv")
+    # Try both possible filenames
+    possible_files = [
+        "All_family_Country_Map.csv",
+        "All_Family_Country_Map.csv"
+    ]
+    
+    df_family = None
+    file_path = None
+    
+    for filename in possible_files:
+        try:
+            file_path = raw(filename)
+            df_family = pd.read_csv(file_path)
+            break
+        except FileNotFoundError:
+            continue
+        except Exception as e:
+            continue
+    
+    if df_family is None:
+        st.error("Family country CSV file not found. Checked files: " + str(possible_files))
+        return
 
     try:
-        df_family = pd.read_csv(file_path)
 
         df_family = df_family.dropna()
         df_family["Total"] = pd.to_numeric(df_family["Total"], errors="coerce")
@@ -191,10 +211,30 @@ def show_patent_families_analysis():
 def show_priority_countries_analysis():
     st.subheader("Priority Countries Analysis")
 
-    file_path = raw("Priority_Country_Map.csv")
+    # Try both possible filenames
+    possible_files = [
+        "Priority_Country_Map.csv",
+        "Priority_country_Map.csv"
+    ]
+    
+    df_priority = None
+    file_path = None
+    
+    for filename in possible_files:
+        try:
+            file_path = raw(filename)
+            df_priority = pd.read_csv(file_path)
+            break
+        except FileNotFoundError:
+            continue
+        except Exception as e:
+            continue
+    
+    if df_priority is None:
+        st.error("Priority country CSV file not found. Checked files: " + str(possible_files))
+        return
 
     try:
-        df_priority = pd.read_csv(file_path)
 
         df_priority = df_priority.dropna()
         df_priority["Total"] = pd.to_numeric(df_priority["Total"], errors="coerce")
