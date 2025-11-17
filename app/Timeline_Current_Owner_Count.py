@@ -217,13 +217,7 @@ def create_timeline_visualizations(df):
     st.markdown("### About This Patent Data")
     st.markdown("""
     This timeline analysis shows patent application trends by current patent owners over time. 
-    The data represents the innovation activity and patent filing strategies of different organizations, 
-    helping to identify leading innovators and emerging trends in the patent landscape.
-    
-    **Key Insights:**
-    - Patent filing patterns can indicate R&D investment cycles
-    - Timeline trends may reflect market opportunities and technological developments  
-    - Current owner data shows post-filing patent ownership (including acquisitions/transfers)
+    The data represents the innovation activity and patent filing strategies of different organizations.
     """)
 
 

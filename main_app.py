@@ -11,6 +11,7 @@ from app.Family_Priority_Count_Map import show_all_family_country_tab
 from app.Timeline_Current_Owner_Count import show_timeline_current_owner_tab
 from app.IPC_CPC_class import show_ipc_cpc_classification_tab
 from app.Norway_Analysis import show_norway_analysis_tab
+from app.Methods_2_3_Analysis import show_methods_2_3_analysis
 
 
 # ---------------------------------------------------------
@@ -24,17 +25,6 @@ st.set_page_config(
 
 
 # ---------------------------------------------------------
-# Sidebar: Title + Refresh Button
-# ---------------------------------------------------------
-st.sidebar.title("Patent Dashboard Menu")
-
-if st.sidebar.button("Refresh & Reprocess Data"):
-    with st.spinner("Reprocessing all data… This may take a moment..."):
-        process_country_count_data()
-    st.sidebar.success("Data refreshed!")
-
-
-# ---------------------------------------------------------
 # Preprocessing on first app load ONLY
 # ---------------------------------------------------------
 if "data_preprocessed" not in st.session_state:
@@ -44,18 +34,38 @@ if "data_preprocessed" not in st.session_state:
 
 
 # ---------------------------------------------------------
-# Sidebar Navigation
+# Navigation
 # ---------------------------------------------------------
+st.sidebar.markdown("## 📊 Analysis Menu")
+st.sidebar.markdown("---")
+
 page = st.sidebar.radio(
-    "Select View:",
+    "Select Analysis:",
     [
-        "Geographic Patent Analysis",
-        "Entity Analysis",
-        "Timeline Analysis",
-        "Classification Analysis: IPC/CPC Codes",
-        "Norway Analysis",
+        "📍 Geographic Patent Analysis",
+        "👥 Entity Analysis", 
+        "📈 Timeline Analysis",
+        "🏷️ Classification Analysis: IPC/CPC Codes",
+        "🇳🇴 Norway Analysis",
+        "🔬 Methods 2/3 Analysis",
     ],
+    format_func=lambda x: x.split(" ", 1)[1] if " " in x else x
 )
+
+# Add special styling for Methods 2/3 Analysis
+st.sidebar.markdown("""
+<style>
+div[data-testid="stRadio"] > label:last-child > div {
+    background-color: #ff6b35 !important;
+    color: white !important;
+    font-weight: bold !important;
+    font-size: 1.2em !important;
+    border-radius: 8px !important;
+    padding: 8px 12px !important;
+    margin: 20px 0 4px 0 !important;
+}
+</style>
+""", unsafe_allow_html=True)
 
 
 # ---------------------------------------------------------
@@ -63,9 +73,11 @@ page = st.sidebar.radio(
 # ---------------------------------------------------------
 st.markdown(
     """
-# Patent Landscape Dashboard
+# Patent Landscape Analysis
 
 Explore patent filing trends across regions, assignees, and jurisdictions.
+
+**About This Analysis:** This patent landscape analysis is designed to provide insights and examples of analytical approaches specifically for Class G06N10 (quantum computing technologies). This is just a draft before final analysis.
 """
 )
 
@@ -73,17 +85,20 @@ Explore patent filing trends across regions, assignees, and jurisdictions.
 # ---------------------------------------------------------
 # PAGE ROUTING
 # ---------------------------------------------------------
-if page == "Geographic Patent Analysis":
+if "Geographic Patent Analysis" in page:
     show_all_family_country_tab()
 
-elif page == "Entity Analysis":
+elif "Entity Analysis" in page:
     show_entity_analysis_tab()
 
-elif page == "Timeline Analysis":
+elif "Timeline Analysis" in page:
     show_timeline_current_owner_tab()
 
-elif page == "Classification Analysis: IPC/CPC Codes":
+elif "Classification Analysis: IPC/CPC Codes" in page:
     show_ipc_cpc_classification_tab()
 
-elif page == "Norway Analysis":
+elif "Methods 2/3 Analysis" in page:
+    show_methods_2_3_analysis()
+
+elif "Norway Analysis" in page:
     show_norway_analysis_tab()

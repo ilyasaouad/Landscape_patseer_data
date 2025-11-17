@@ -32,6 +32,154 @@ def show_ipc_cpc_classification_tab():
     
     st.title("IPC and CPC Classification Analysis")
     
+    # Classification Descriptions
+    st.markdown("### Classification Descriptions")
+    st.markdown("""
+    **IPC Classification Descriptions:**
+    - **G06N10/40**: Patent classification code for both IPCs and CPCs
+    
+    **CPC Classification Descriptions:**  
+    - **G06N10/40**: Patent classification code for both IPCs and CPCs
+    """)
+    
+    # Total Records Analysis using IPC_Full.csv and CPC_Full.csv
+    st.markdown("### 📊 Total Records Analysis")
+    
+    try:
+        # Load IPC_Full.csv 
+        ipc_file = "data/raw/IPC_Full.csv"
+        if os.path.exists(ipc_file):
+            df_ipc_full = pd.read_csv(ipc_file)
+            
+            st.markdown("#### 📋 Top 10 IPC Classifications")
+            
+            # Show first 10 rows as table
+            ipc_top_10 = df_ipc_full.head(10)
+            st.dataframe(ipc_top_10, use_container_width=True)
+            
+            # Create vertical bar chart from the first 10 rows
+            if 'Total' in ipc_top_10.columns:
+                
+                # Sort by Total values (descending - largest first) - use original values
+                ipc_top_10_sorted = ipc_top_10.sort_values('Total', ascending=False, key=lambda x: pd.to_numeric(x.astype(str).str.replace(',',''), errors='coerce'))
+                
+                # Get classification names (first column) and shorten them
+                class_col = ipc_top_10_sorted.columns[0]
+                
+                # Create shortened labels (class code + first 3 words of description)
+                def shorten_classification(text):
+                    if ':' in str(text):
+                        parts = str(text).split(':', 1)
+                        class_code = parts[0].strip()
+                        description = parts[1].strip() if len(parts) > 1 else ''
+                        desc_words = description.split()[:3]  # First 3 words
+                        short_desc = ' '.join(desc_words)
+                        return f"{class_code}: {short_desc}" if short_desc else class_code
+                    return str(text)
+                
+                ipc_top_10_sorted['Short_Label'] = ipc_top_10_sorted[class_col].apply(shorten_classification)
+                
+                # Create horizontal bar chart with different color for each bar
+                fig_ipc = px.bar(
+                    ipc_top_10_sorted,
+                    x='Total',
+                    y='Short_Label',
+                    title='Top 10 IPC Classifications',
+                    color='Total',
+                    color_continuous_scale='viridis',
+                    orientation='h'
+                )
+                
+                fig_ipc.update_layout(
+                    height=600,
+                    xaxis_title="Total Records",
+                    yaxis_title="IPC Classification",
+                    showlegend=False,
+                    yaxis={'autorange': 'reversed'}
+                )
+                
+                fig_ipc.update_traces(
+                    text=ipc_top_10_sorted['Total'],
+                    textposition='outside',
+                    textfont_size=12
+                )
+                
+                st.plotly_chart(fig_ipc, use_container_width=True)
+            else:
+                st.warning("'Total' column not found in IPC_Full.csv")
+        else:
+            st.warning("IPC_Full.csv not found")
+            
+        # Load CPC_Full.csv
+        cpc_file = "data/raw/CPC_Full.csv"
+        if os.path.exists(cpc_file):
+            df_cpc_full = pd.read_csv(cpc_file)
+            
+            st.markdown("#### 🏷️ Top 10 CPC Classifications")
+            
+            # Show first 10 rows as table
+            cpc_top_10 = df_cpc_full.head(10)
+            st.dataframe(cpc_top_10, use_container_width=True)
+            
+            # Create vertical bar chart from the first 10 rows
+            if 'Total' in cpc_top_10.columns:
+                
+                # Sort by Total values (descending - largest first) - use original values
+                cpc_top_10_sorted = cpc_top_10.sort_values('Total', ascending=False, key=lambda x: pd.to_numeric(x.astype(str).str.replace(',',''), errors='coerce'))
+                
+                # Get classification names (should be "CPC Full" column)
+                class_col = 'CPC Full' if 'CPC Full' in cpc_top_10_sorted.columns else cpc_top_10_sorted.columns[0]
+                
+                # Create shortened labels (class code + first 3 words of description)
+                def shorten_classification(text):
+                    if ':' in str(text):
+                        parts = str(text).split(':', 1)
+                        class_code = parts[0].strip()
+                        description = parts[1].strip() if len(parts) > 1 else ''
+                        desc_words = description.split()[:3]  # First 3 words
+                        short_desc = ' '.join(desc_words)
+                        return f"{class_code}: {short_desc}" if short_desc else class_code
+                    return str(text)
+                
+                cpc_top_10_sorted['Short_Label'] = cpc_top_10_sorted[class_col].apply(shorten_classification)
+                
+                # Create horizontal bar chart with different color for each bar
+                fig_cpc = px.bar(
+                    cpc_top_10_sorted,
+                    x='Total',
+                    y='Short_Label',
+                    title='Top 10 CPC Classifications',
+                    color='Total',
+                    color_continuous_scale='plasma',
+                    orientation='h'
+                )
+                
+                fig_cpc.update_layout(
+                    height=600,
+                    xaxis_title="Total Records",
+                    yaxis_title="CPC Classification",
+                    showlegend=False,
+                    yaxis={'autorange': 'reversed'}
+                )
+                
+                fig_cpc.update_traces(
+                    text=cpc_top_10_sorted['Total'],
+                    textposition='outside',
+                    textfont_size=12
+                )
+                
+                st.plotly_chart(fig_cpc, use_container_width=True)
+            else:
+                st.warning("'Total' column not found in CPC_Full.csv")
+        else:
+            st.warning("CPC_Full.csv not found")
+            
+    except Exception as e:
+        st.warning(f"Could not load IPC/CPC full data files: {e}")
+        st.info("Please ensure IPC_Full.csv and CPC_Full.csv files are available in data/raw/")
+    
+    st.markdown("---")
+    
     # Educational explanation about patent classifications
     st.info("""
     **💡 Why Patents Have Multiple Classifications:**
@@ -765,6 +913,22 @@ def create_temporal_analysis(df, classification_type):
         
         df_temporal_display = df_temporal_display.rename(columns=column_renames)
         
+        # Filter to 2010-2025 range
+        df_temporal_final['Application Year'] = pd.to_numeric(df_temporal_final['Application Year'], errors='coerce')
+        df_temporal_final = df_temporal_final.dropna(subset=['Application Year'])
+        df_temporal_final = df_temporal_final[
+            (df_temporal_final['Application Year'] >= 2010) & 
+            (df_temporal_final['Application Year'] <= 2025)
+        ]
+        
+        # Update display dataframe with same filter
+        df_temporal_display['Application Year'] = pd.to_numeric(df_temporal_display['Application Year'], errors='coerce')
+        df_temporal_display = df_temporal_display.dropna(subset=['Application Year'])
+        df_temporal_display = df_temporal_display[
+            (df_temporal_display['Application Year'] >= 2010) & 
+            (df_temporal_display['Application Year'] <= 2025)
+        ]
+        
         # Sort by year from small to big
         df_temporal_display = df_temporal_display.sort_values('Application Year').reset_index(drop=True)
         df_temporal_final = df_temporal_final.sort_values('Application Year').reset_index(drop=True)
@@ -803,10 +967,11 @@ def create_temporal_analysis(df, classification_type):
             ))
         
         fig.update_layout(
-            title='CPC Classification Trends Over Time',
+            title='CPC Classification Trends Over Time (2010-2025)',
             xaxis_title='Application Year',
             yaxis_title='Number of Patent Applications',
-            height=500,
+            height=600,
+            width=1200,
             hovermode='x unified',
             legend=dict(
                 orientation="h",
@@ -814,10 +979,18 @@ def create_temporal_analysis(df, classification_type):
                 y=1.02,
                 xanchor="right",
                 x=1
+            ),
+            xaxis=dict(
+                tickmode='linear',
+                tick0=2010,
+                dtick=1
             )
         )
         
         st.plotly_chart(fig, use_container_width=True)
+        
+        # Add note about incomplete 2025 data
+        st.info("📝 **Note:** The apparent decline in patent applications towards the end of 2025 is likely due to incomplete data, as not all patent applications for that year have been published yet. Patent publication typically occurs 18 months after the filing date.")
         
         # Simple trend analysis
         st.markdown("#### Temporal Insights")

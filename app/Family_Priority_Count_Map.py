@@ -30,7 +30,7 @@ def show_all_family_country_tab():
     """)
     
     # Create two tabs for different analyses
-    tab1, tab2 = st.tabs(["Patent Families", "Priority Countries"])
+    tab1, tab2 = st.tabs(["📍 Patent Families", "🌍 Priority Countries"])
     
     with tab1:
         show_patent_families_analysis()

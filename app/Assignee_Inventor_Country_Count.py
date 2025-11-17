@@ -231,7 +231,7 @@ def show_entity_analysis_tab():
     st.title("Entity Analysis")
     
     # Create two tabs for different entity analyses
-    tab1, tab2 = st.tabs(["Assignees", "Inventors"])
+    tab1, tab2 = st.tabs(["🏢 Assignees", "👨‍💼 Inventors"])
     
     with tab1:
         show_assignee_inventor_country_count_tab()
