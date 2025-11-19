@@ -397,7 +397,7 @@ def save_classification_data(df, filename):
         output_path = processed(filename)
         output_path.parent.mkdir(parents=True, exist_ok=True)
         df.to_csv(output_path, index=False, encoding="utf-8")
-        st.success(f"✅ Saved {filename} to data/processed/")
+        # File saved silently - no UI message needed
     except Exception as e:
         st.error(f"Error saving {filename}: {e}")
 
