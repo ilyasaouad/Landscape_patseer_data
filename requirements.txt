@@ -5,4 +5,5 @@ pycountry
 openpyxl
 Pillow
 numpy
+networkx>=3.0
 
